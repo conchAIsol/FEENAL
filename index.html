@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solana Circle</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+
+    <link href="index.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <p id="redmcap" style="position: relative; color: black; font-size: 20px; font-family: 'basic'">Current Market Cap: Fetching / Pool Migrating</p>
+    <p id="redca" style="position: relative;  font-size: 20px; font-family: 'basic'">CA: WE ARE SETTING UP LAUNCH NOW</p>
+    <img id="redcircle" src="solcircle.png">
+    <p id="solprice"></p>
+    
+    
+
+    
+    <a href="https://x.com/Solana_Circle" target="_blank"><img id="x" src="x64.png"></a>
+    
+
+
+
+    
+       
+        <div class="zoom-container">
+          <input type="range" id="zoomBar" class="zoom-bar" min="1" max="200" value="100" step="1">
+          <div class="zoom-value">
+            Zoom Level: <span id="zoomValue">100%</span>
+          </div>
+        </div>
+      
+
+<script>
+    var redMint = ''
+    var symbol = 'SOLUSDT'
+    $.ajax({
+        method: 'GET',
+        url: 'https://api.api-ninjas.com/v1/cryptoprice?symbol=' + symbol,
+        headers: { 'X-Api-Key': 'GdK4SGLNJBz12RSfzl+M8Q==YfETzG6ojWk8yvq3'},
+        contentType: 'application/json',
+        success: function(result) {
+            console.log(result);
+            solPrice = document.getElementById('solprice')
+            solPrice.textContent = `SOL PRICE: ${Math.round(result.price * 100) / 100}`
+        },
+        error: function ajaxError(jqXHR) {
+            console.error('Error: ', jqXHR.responseText);
+        }
+    });
+
+    
+    
+    var prevMcap = undefined
+    var newMcap = undefined
+    var mcap = document.getElementById('mcap')
+    var hw = document.getElementById('hw')
+    var mcapInUse = undefined 
+    var intStarted = false
+    var scaleValue = 1; 
+    var REDGLOBAL = undefined
+    var BLUEGLOBAL = undefined
+    
+    const ws = new WebSocket('wss://pumpportal.fun/api/data');
+
+
+    ws.onopen = function(event){
+        console.log("socket connected")
+        payload = {
+            "method": "subscribeTokenTrade",
+            "keys": [""] 
+        }
+          ws.send(JSON.stringify(payload));
+    
+    }
+
+
+    let redCa = document.getElementById('redca')
+    redCa.textContent = `CA: ${redMint}`
+    
+    
+
+    ws.onmessage = function(event){
+        
+        console.log('received message')
+        let data = JSON.parse(event.data)
+        console.log(data.mint)
+       
+        
+
+        
+        
+    }
+
+
+    var redMcap = undefined
+    var redPrevMcap = undefined 
+
+    setInterval(handleRed, 2000)
+    console.log(redMint)
+
+    async function handleRed(data){
+        
+        
+        let redMcapLabel = document.getElementById('redmcap')
+
+        
+
+        const url = `https://data.solanatracker.io/tokens/${redMint}`
+        console.log(redMint)
+
+        const headers = {
+            "x-api-key": '67a83324-889c-48ec-82a0-9533de1a939d'
+        }
+
+        try{
+            const response = await fetch(url, {
+                method: 'GET', headers: headers
+            })
+
+            const data = await response.json()
+            REDGLOBAL = Math.round(data.pools[0].marketCap.usd)
+            if(REDGLOBAL == 0 || REDGLOBAL == undefined){
+                redMcapLabel.textContent = 'Market Cap: Pool Migrating...'
+            }
+            
+        } catch (error){
+            redMcapLabel.textContent = 'Market Cap: Pool Migrating...'
+            console.log("error with sol api")
+            
+        }
+        
+        console.log('handling red')
+        let redCircle = document.getElementById('redcircle')
+        redMcap = REDGLOBAL
+       
+
+        if(redPrevMcap == undefined){
+            redPrevMcap = redMcap
+            let redNewHeight = ((redMcap / 200) + 25) * scaleValue
+            let redNewWidth = ((redMcap / 200) + 25) * scaleValue
+    
+            redCircle.style.height = `${redNewHeight}px`
+            redCircle.style.width = `${redNewWidth}px`
+            redMcapLabel.textContent = `Current Market Cap: ${redMcap}`
+            
+            
+        }else{
+            if(redMcap > redPrevMcap){
+                console.log("red greater")
+                
+    
+                let redNewHeight = ((redMcap / 200) + 25) * scaleValue
+                let redNewWidth = ((redMcap / 200) + 25) * scaleValue
+    
+                redCircle.style.height = `${redNewHeight}px`
+                redCircle.style.width = `${redNewWidth}px`
+                redMcapLabel.textContent = `Current Market Cap: ${redMcap}`
+                
+                
+                
+                let borderVal = redNewHeight / 50
+                if(borderVal > 20){
+                    borderVal = 20
+                }
+                
+                
+                
+            }
+            if(redMcap < redPrevMcap){
+                console.log("red less")
+                let redNewHeight = ((redMcap / 200) + 25) * scaleValue
+                let redNewWidth = ((redMcap / 200) + 25) * scaleValue
+
+                
+    
+                redCircle.style.height = `${redNewHeight}px`
+                redCircle.style.width = `${redNewWidth}px`
+                redMcapLabel.textContent = `Current Market Cap: ${redMcap}`
+                
+                console.log(redCircle.style.border)
+
+                let borderVal = redNewHeight / 50
+                if(borderVal > 20){
+                    borderVal = 20
+                }
+                redCircle.style.border = `${borderVal}px solid lightred`
+                console.log(redCircle.style.border)
+
+                
+            }
+
+            
+        }
+
+        redPrevMcap = redMcap
+
+
+        
+        
+
+    }
+
+   
+    
+
+  
+   
+
+
+    
+    
+    
+
+
+  
+
+    
+
+    
+
+    
+
+ 
+
+    const zoomBar = document.getElementById('zoomBar');
+    const zoomValue = document.getElementById('zoomValue');
+    const body = document.body;
+
+    // Event listener to update zoom level when the slider changes
+    zoomBar.addEventListener('input', () => {
+      scaleValue = zoomBar.value / 100;  // Get zoom level as a decimal
+      zoomValue.textContent = `${zoomBar.value}%`; // Display the current zoom level
+      
+    
+      let redNewHeight = ((REDGLOBAL / 200) + 25) * scaleValue;
+    let redNewWidth = ((REDGLOBAL / 200) + 25) * scaleValue;
+
+    
+
+    
+
+    // Update the red circle's size and position to keep it centered
+    let redCircle = document.getElementById('redcircle');
+    redCircle.style.width = `${redNewWidth}px`;
+    redCircle.style.height = `${redNewHeight}px`;
+    redCircle.style.transform = `translate(-50%, -50%)`;  // Keep it centered
+
+    // Update the blue circle's size and position to keep it centered
+
+      
+      
+     
+    });
+
+    // Initialize the zoom level at 100%
+    zoomBar.value = 100;
+
+</script>
+
+</body>
+</html>
